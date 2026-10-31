@@ -1,4 +1,4 @@
-Sistema de Gestión y Control de Acceso de Empleados
+## Sistema de Gestión y Control de Acceso de Empleados
 
 API REST para administrar empleados, controlar sus credenciales de acceso, registrar entradas y salidas en los puntos de acceso de la sede y consultar el historial de movimientos. Caso de estudio de Programación Distribuida.
 
@@ -21,7 +21,7 @@ Los comandos (`CasosDeUso/*/Comandos`) modifican el estado y confirman con la un
 - SQL Server local, Express o LocalDB
 - `dotnet tool install --global dotnet-ef`
 
-## Puesta en marcha
+## Ejecutar
 
 1. Ajustar `ConexionPredeterminada` en `ControlAcceso.Api/appsettings.json`:
 
