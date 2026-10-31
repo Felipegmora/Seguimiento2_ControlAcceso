@@ -1,0 +1,75 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "restaurar",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "restore",
+        "${workspaceFolder}/ControlAcceso.sln"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "compilar",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/ControlAcceso.sln",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "crear migracion inicial",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "ef",
+        "migrations",
+        "add",
+        "Inicial",
+        "--project",
+        "${workspaceFolder}/ControlAcceso.Persistencia",
+        "--startup-project",
+        "${workspaceFolder}/ControlAcceso.Api",
+        "--output-dir",
+        "Migraciones"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "actualizar base de datos",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "ef",
+        "database",
+        "update",
+        "--project",
+        "${workspaceFolder}/ControlAcceso.Persistencia",
+        "--startup-project",
+        "${workspaceFolder}/ControlAcceso.Api"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ejecutar api",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/ControlAcceso.Api"
+      ],
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}

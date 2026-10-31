@@ -1,0 +1,306 @@
+@host = http://localhost:5296
+
+### Documentación OpenAPI generada
+GET {{host}}/openapi/v1.json
+Accept: application/json
+
+###############################################################
+# Áreas organizacionales (datos iniciales)
+# Ejecutar esta petición primero: las siguientes reutilizan su respuesta.
+###############################################################
+
+# @name listarAreas
+GET {{host}}/api/areas
+Accept: application/json
+
+###############################################################
+# RF-01. Gestión de empleados
+###############################################################
+
+### Registrar un empleado
+# @name crearEmpleado
+POST {{host}}/api/empleados
+Content-Type: application/json
+
+{
+  "numeroDocumento": "1036402115",
+  "nombres": "Felipe",
+  "apellidos": "Gomez Mora",
+  "correoElectronico": "felipe.gomez@empresa.com",
+  "cargo": "Analista de sistemas",
+  "areaId": "{{listarAreas.response.body.$.datos[0].id}}"
+}
+
+### Registrar un segundo empleado
+# @name crearSegundoEmpleado
+POST {{host}}/api/empleados
+Content-Type: application/json
+
+{
+  "numeroDocumento": "1017255488",
+  "nombres": "Daniela",
+  "apellidos": "Restrepo Ruiz",
+  "correoElectronico": "daniela.restrepo@empresa.com",
+  "cargo": "Auxiliar de bodega",
+  "areaId": "{{listarAreas.response.body.$.datos[1].id}}"
+}
+
+### Registrar un empleado con identificación repetida -> 409
+POST {{host}}/api/empleados
+Content-Type: application/json
+
+{
+  "numeroDocumento": "1036402115",
+  "nombres": "Otro",
+  "apellidos": "Empleado",
+  "correoElectronico": "otro.empleado@empresa.com",
+  "cargo": "Auxiliar",
+  "areaId": "{{listarAreas.response.body.$.datos[0].id}}"
+}
+
+### Registrar un empleado con datos inválidos -> 400
+POST {{host}}/api/empleados
+Content-Type: application/json
+
+{
+  "numeroDocumento": "1",
+  "nombres": "",
+  "apellidos": "Perez",
+  "correoElectronico": "correo-invalido",
+  "cargo": "A",
+  "areaId": "00000000-0000-0000-0000-000000000000"
+}
+
+### Consultar un empleado por identificador
+GET {{host}}/api/empleados/{{crearEmpleado.response.body.$.datos}}
+Accept: application/json
+
+### Consultar un empleado inexistente -> 404
+GET {{host}}/api/empleados/11111111-1111-1111-1111-111111111111
+Accept: application/json
+
+### Listar empleados paginados
+GET {{host}}/api/empleados?numeroPagina=1&tamanoPagina=10
+Accept: application/json
+
+### Listar empleados filtrando por área y estado
+GET {{host}}/api/empleados?numeroPagina=1&tamanoPagina=10&areaId={{listarAreas.response.body.$.datos[0].id}}&estado=Activo
+Accept: application/json
+
+### Actualizar un empleado
+PUT {{host}}/api/empleados/{{crearEmpleado.response.body.$.datos}}
+Content-Type: application/json
+
+{
+  "nombres": "Felipe Andres",
+  "apellidos": "Gomez Mora",
+  "correoElectronico": "felipe.gomez@empresa.com",
+  "cargo": "Ingeniero de software",
+  "areaId": "{{listarAreas.response.body.$.datos[0].id}}"
+}
+
+###############################################################
+# RF-06. Administración de puntos de acceso
+###############################################################
+
+### Registrar un punto de acceso
+# @name registrarPuntoAcceso
+POST {{host}}/api/puntos-acceso
+Content-Type: application/json
+
+{
+  "nombre": "Puerta lateral",
+  "tipo": "AreaRestringida",
+  "descripcion": "Acceso controlado al área de despachos"
+}
+
+### Registrar un punto de acceso con nombre repetido -> 409
+POST {{host}}/api/puntos-acceso
+Content-Type: application/json
+
+{
+  "nombre": "Puerta lateral",
+  "tipo": "Bodega",
+  "descripcion": "Duplicado"
+}
+
+### Consultar un punto de acceso por identificador
+GET {{host}}/api/puntos-acceso/{{registrarPuntoAcceso.response.body.$.datos}}
+Accept: application/json
+
+### Listar puntos de acceso paginados
+GET {{host}}/api/puntos-acceso?numeroPagina=1&tamanoPagina=10
+Accept: application/json
+
+### Listar únicamente los puntos de acceso habilitados
+GET {{host}}/api/puntos-acceso?numeroPagina=1&tamanoPagina=10&habilitado=true
+Accept: application/json
+
+###############################################################
+# RF-02. Gestión de credenciales
+###############################################################
+
+### Asignar una credencial
+# @name asignarCredencial
+POST {{host}}/api/credenciales
+Content-Type: application/json
+
+{
+  "codigo": "CRED-001",
+  "empleadoId": "{{crearEmpleado.response.body.$.datos}}"
+}
+
+### Asignar una segunda credencial
+# @name asignarSegundaCredencial
+POST {{host}}/api/credenciales
+Content-Type: application/json
+
+{
+  "codigo": "CRED-002",
+  "empleadoId": "{{crearSegundoEmpleado.response.body.$.datos}}"
+}
+
+### Asignar una credencial con código repetido -> 409
+POST {{host}}/api/credenciales
+Content-Type: application/json
+
+{
+  "codigo": "CRED-001",
+  "empleadoId": "{{crearEmpleado.response.body.$.datos}}"
+}
+
+### Consultar el estado de una credencial por su código
+GET {{host}}/api/credenciales/codigo/CRED-001
+Accept: application/json
+
+### Consultar las credenciales de un empleado
+GET {{host}}/api/credenciales/empleado/{{crearEmpleado.response.body.$.datos}}
+Accept: application/json
+
+###############################################################
+# RF-03. Registro de entradas y salidas
+###############################################################
+
+### Entrada autorizada
+POST {{host}}/api/accesos
+Content-Type: application/json
+
+{
+  "codigoCredencial": "CRED-001",
+  "puntoAccesoId": "{{registrarPuntoAcceso.response.body.$.datos}}",
+  "movimiento": "Entrada"
+}
+
+### Segunda entrada seguida -> rechazada por movimiento incoherente
+POST {{host}}/api/accesos
+Content-Type: application/json
+
+{
+  "codigoCredencial": "CRED-001",
+  "puntoAccesoId": "{{registrarPuntoAcceso.response.body.$.datos}}",
+  "movimiento": "Entrada"
+}
+
+### Salida autorizada
+POST {{host}}/api/accesos
+Content-Type: application/json
+
+{
+  "codigoCredencial": "CRED-001",
+  "puntoAccesoId": "{{registrarPuntoAcceso.response.body.$.datos}}",
+  "movimiento": "Salida"
+}
+
+### Salida sin entrada previa -> rechazada
+POST {{host}}/api/accesos
+Content-Type: application/json
+
+{
+  "codigoCredencial": "CRED-001",
+  "puntoAccesoId": "{{registrarPuntoAcceso.response.body.$.datos}}",
+  "movimiento": "Salida"
+}
+
+### Movimiento con una credencial inexistente -> 404
+POST {{host}}/api/accesos
+Content-Type: application/json
+
+{
+  "codigoCredencial": "CRED-999",
+  "puntoAccesoId": "{{registrarPuntoAcceso.response.body.$.datos}}",
+  "movimiento": "Entrada"
+}
+
+### Bloquear la credencial
+PATCH {{host}}/api/credenciales/{{asignarCredencial.response.body.$.datos}}/bloquear
+
+### Entrada con credencial bloqueada -> rechazada
+POST {{host}}/api/accesos
+Content-Type: application/json
+
+{
+  "codigoCredencial": "CRED-001",
+  "puntoAccesoId": "{{registrarPuntoAcceso.response.body.$.datos}}",
+  "movimiento": "Entrada"
+}
+
+### Deshabilitar el punto de acceso
+PATCH {{host}}/api/puntos-acceso/{{registrarPuntoAcceso.response.body.$.datos}}/deshabilitar
+
+### Entrada en un punto deshabilitado -> rechazada
+POST {{host}}/api/accesos
+Content-Type: application/json
+
+{
+  "codigoCredencial": "CRED-002",
+  "puntoAccesoId": "{{registrarPuntoAcceso.response.body.$.datos}}",
+  "movimiento": "Entrada"
+}
+
+### Habilitar nuevamente el punto de acceso
+PATCH {{host}}/api/puntos-acceso/{{registrarPuntoAcceso.response.body.$.datos}}/habilitar
+
+### Desactivar al segundo empleado
+PATCH {{host}}/api/empleados/{{crearSegundoEmpleado.response.body.$.datos}}/desactivar
+
+### Entrada de un empleado inactivo -> rechazada
+POST {{host}}/api/accesos
+Content-Type: application/json
+
+{
+  "codigoCredencial": "CRED-002",
+  "puntoAccesoId": "{{registrarPuntoAcceso.response.body.$.datos}}",
+  "movimiento": "Entrada"
+}
+
+### Revocar la credencial
+PATCH {{host}}/api/credenciales/{{asignarCredencial.response.body.$.datos}}/revocar
+
+### Revocar dos veces la misma credencial -> 409
+PATCH {{host}}/api/credenciales/{{asignarCredencial.response.body.$.datos}}/revocar
+
+###############################################################
+# RF-04. Consulta del historial de accesos
+###############################################################
+
+### Historial paginado
+GET {{host}}/api/accesos?numeroPagina=1&tamanoPagina=10
+Accept: application/json
+
+### Historial de un empleado
+GET {{host}}/api/accesos?numeroPagina=1&tamanoPagina=10&empleadoId={{crearEmpleado.response.body.$.datos}}
+Accept: application/json
+
+### Historial por punto de acceso y resultado
+GET {{host}}/api/accesos?numeroPagina=1&tamanoPagina=10&puntoAccesoId={{registrarPuntoAcceso.response.body.$.datos}}&resultado=Rechazado
+Accept: application/json
+
+### Historial por rango de fechas
+GET {{host}}/api/accesos?numeroPagina=1&tamanoPagina=10&desde=2026-01-01T00:00:00Z&hasta=2026-12-31T23:59:59Z
+Accept: application/json
+
+### Historial con un tamaño de página inválido -> 400
+GET {{host}}/api/accesos?numeroPagina=1&tamanoPagina=500
+Accept: application/json
+
+###
